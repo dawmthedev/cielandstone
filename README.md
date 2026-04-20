@@ -1,5 +1,17 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment
+
+Copy `.env.example` to your deployment environment and set the Mailgun variables there. The contact form uses:
+
+```bash
+MAILGUN_API_KEY
+MAILGUN_DOMAIN
+MAILGUN_LEAD_EMAIL
+MAILGUN_FROM
+MAILGUN_BASE_URL
+```
+
 ## Getting Started
 
 First, run the development server:

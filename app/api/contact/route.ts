@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 const STUDIO_EMAIL = "info@cielandstone.com";
+const DEFAULT_LEAD_EMAIL = "lead@cielandstone.com";
 
 type ContactPayload = {
   name?: string;
@@ -48,6 +49,54 @@ function buildInquiryHtml(data: {
   `;
 }
 
+function buildConfirmationHtml(data: { name: string; location: string; projectType: string }) {
+  return `
+    <div style="font-family: Helvetica, Arial, sans-serif; line-height: 1.6; color: #201814;">
+      <h2 style="margin-bottom: 16px;">We received your Ciel &amp; Stone inquiry</h2>
+      <p>Thanks, ${escapeHtml(data.name)}. Your inquiry for <strong>${escapeHtml(data.projectType)}</strong> in <strong>${escapeHtml(data.location)}</strong> is in our inbox.</p>
+      <p>Our team will review it and reply from <strong>info@cielandstone.com</strong> soon.</p>
+    </div>
+  `;
+}
+
+async function sendMailgunMessage({
+  mailgunBaseUrl,
+  mailgunDomain,
+  mailgunKey,
+  from,
+  to,
+  subject,
+  html,
+  text,
+  replyTo,
+}: {
+  mailgunBaseUrl: string;
+  mailgunDomain: string;
+  mailgunKey: string;
+  from: string;
+  to: string[];
+  subject: string;
+  html: string;
+  text: string;
+  replyTo?: string;
+}) {
+  const form = new FormData();
+  form.append("from", from);
+  form.append("to", to.join(","));
+  form.append("subject", subject);
+  form.append("text", text);
+  form.append("html", html);
+  if (replyTo) form.append("h:Reply-To", replyTo);
+
+  return fetch(`${mailgunBaseUrl}/v3/${mailgunDomain}/messages`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${Buffer.from(`api:${mailgunKey}`).toString("base64")}`,
+    },
+    body: form,
+  });
+}
+
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => null)) as ContactPayload | null;
 
@@ -76,6 +125,7 @@ export async function POST(req: Request) {
   const mailgunDomain = process.env.MAILGUN_DOMAIN?.trim();
   const mailgunBaseUrl = (process.env.MAILGUN_BASE_URL || "https://api.mailgun.net").replace(/\/$/, "");
   const from = process.env.MAILGUN_FROM || `Ciel & Stone <postmaster@${mailgunDomain || "mg.cielandstone.com"}>`;
+  const leadEmail = process.env.MAILGUN_LEAD_EMAIL?.trim() || DEFAULT_LEAD_EMAIL;
 
   const payload = { name, email, phone, location, projectType, budget, timeline, message };
   const html = buildInquiryHtml(payload);
@@ -89,11 +139,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, queued: true });
   }
 
-  const form = new FormData();
-  form.append("from", from);
-  form.append("to", STUDIO_EMAIL);
-  form.append("subject", `New inquiry from ${name}`);
-  form.append("text", [
+  const text = [
     `Name: ${name}`,
     `Email: ${email}`,
     `Phone: ${phone || "Not provided"}`,
@@ -104,21 +150,40 @@ export async function POST(req: Request) {
     "",
     "Project Notes:",
     message,
-  ].join("\n"));
-  form.append("html", html);
-  form.append("h:Reply-To", email);
+  ].join("\n");
 
-  const response = await fetch(`${mailgunBaseUrl}/v3/${mailgunDomain}/messages`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`api:${mailgunKey}`).toString("base64")}`,
-    },
-    body: form,
-  });
+  const [leadResponse, confirmationResponse] = await Promise.all([
+    sendMailgunMessage({
+      mailgunBaseUrl,
+      mailgunDomain,
+      mailgunKey,
+      from,
+      to: [STUDIO_EMAIL, leadEmail],
+      subject: `New inquiry from ${name}`,
+      html,
+      text,
+      replyTo: email,
+    }),
+    sendMailgunMessage({
+      mailgunBaseUrl,
+      mailgunDomain,
+      mailgunKey,
+      from,
+      to: [email],
+      subject: "We received your Ciel & Stone inquiry",
+      html: buildConfirmationHtml(payload),
+      text: [
+        `Thanks, ${name}.`,
+        `We received your inquiry for ${projectType} in ${location}.`,
+        `Our team will review it and reply from info@cielandstone.com soon.`,
+      ].join("\n"),
+    }),
+  ]);
 
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => "");
-    console.error("[contact:mailgun-error]", errorText);
+  if (!leadResponse.ok || !confirmationResponse.ok) {
+    const leadError = await leadResponse.text().catch(() => "");
+    const confirmError = await confirmationResponse.text().catch(() => "");
+    console.error("[contact:mailgun-error]", { leadError, confirmError });
     return NextResponse.json(
       {
         error:
@@ -129,7 +194,7 @@ export async function POST(req: Request) {
   }
 
   console.log("[contact:delivered]", {
-    to: STUDIO_EMAIL,
+    to: [STUDIO_EMAIL, leadEmail],
     provider: "mailgun",
     name,
     email,
@@ -137,5 +202,5 @@ export async function POST(req: Request) {
     projectType,
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, delivered: true });
 }
