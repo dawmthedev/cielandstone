@@ -16,7 +16,7 @@ export function Footer() {
           <div className="text-xs tracking-[0.22em] uppercase text-foreground/80">Explore</div>
           <div className="flex flex-col gap-2 text-sm text-foreground/70">
             <Link href="/projects" className="hover:text-foreground">
-              Projects
+              Portfolio
             </Link>
             <Link href="/process" className="hover:text-foreground">
               Process

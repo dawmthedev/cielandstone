@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { cn } from "@/lib/utils/cn";
 
 const nav = [
-  { href: "/projects", label: "Projects" },
+  { href: "/projects", label: "Portfolio" },
   { href: "/process", label: "Process" },
   { href: "/contact", label: "Contact" },
 ];
