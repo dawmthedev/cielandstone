@@ -1,28 +1,21 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import type { Project } from "@/lib/data/projects";
 import { ProjectCard } from "@/components/projects/project-card";
 
-function prefersReducedMotion() {
-  if (typeof window === "undefined") return true;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
 export function FeaturedProjectsScroller({ projects }: { projects: Project[] }) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const reduce = useMemo(() => prefersReducedMotion(), []);
-  const interactive = !reduce && projects.length > 1;
-
   useEffect(() => {
-    if (!interactive) return;
     if (!rootRef.current || !trackRef.current) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (projects.length <= 1) return;
 
     gsap.registerPlugin(ScrollTrigger);
 
@@ -63,7 +56,7 @@ export function FeaturedProjectsScroller({ projects }: { projects: Project[] }) 
     }, root);
 
     return () => ctx.revert();
-  }, [interactive]);
+  }, [projects.length]);
 
   const goTo = (index: number) => {
     if (!rootRef.current || !trackRef.current) return;
@@ -81,7 +74,7 @@ export function FeaturedProjectsScroller({ projects }: { projects: Project[] }) 
     const max = track.scrollWidth - root.clientWidth;
     const x = Math.max(0, Math.min(max, left));
 
-    const st = interactive ? ScrollTrigger.getById("featured-projects") : null;
+    const st = ScrollTrigger.getById("featured-projects");
     if (st) {
       const progress = max === 0 ? 0 : x / max;
       st.scroll(st.start + progress * (st.end - st.start));
@@ -126,7 +119,7 @@ export function FeaturedProjectsScroller({ projects }: { projects: Project[] }) 
 
       <div
         ref={rootRef}
-        className={interactive ? "relative mt-12 overflow-hidden" : "relative mt-12 overflow-x-auto"}
+        className="relative mt-12 overflow-hidden"
       >
         <div
           ref={trackRef}
@@ -137,12 +130,12 @@ export function FeaturedProjectsScroller({ projects }: { projects: Project[] }) 
             <div
               key={p.slug}
               data-project-card
-              className={interactive ? "w-[84vw] shrink-0 md:w-[70vw] lg:w-[56vw]" : "w-[88vw] shrink-0 md:w-[48vw]"}
+              className="w-[84vw] shrink-0 md:w-[70vw] lg:w-[56vw]"
             >
               <ProjectCard project={p} priority={i === 0} />
             </div>
           ))}
-          <div className={interactive ? "w-[8vw] shrink-0" : "w-6 shrink-0"} />
+          <div className="w-[8vw] shrink-0" />
         </div>
       </div>
     </section>

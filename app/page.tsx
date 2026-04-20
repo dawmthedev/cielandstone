@@ -17,31 +17,31 @@ export default function Home() {
           <div className="max-w-xl">
             <div className="text-xs tracking-[0.22em] uppercase text-foreground/60">What We Do</div>
             <h2 className="mt-4 text-balance text-4xl leading-[1.02] tracking-[-0.04em] sm:text-5xl">
-              Design guidance that helps homeowners make better decisions earlier.
+              Residential design that feels tailored, calm, and built for real living.
             </h2>
             <p className="mt-6 text-pretty text-base leading-7 text-foreground/68 sm:text-lg">
-              We organize design, drawings, visuals, and coordination into a single clear process so your project
-              feels intentional before construction pressure starts to build.
+              We organize design, drawings, visuals, and coordination into a single clear process so kitchens, baths,
+              bedrooms, outdoor rooms, and additions feel intentional before construction pressure starts to build.
             </p>
           </div>
 
           <div className="grid gap-5 md:grid-cols-2">
             {[
               {
-                title: "Renovations + Additions",
-                body: "Smart scope shaping, layout studies, and architectural direction for homeowners improving the way they live.",
+                title: "Kitchens + Great Rooms",
+                body: "Thoughtful layouts, custom storage, and material direction that make daily routines feel elevated and easy.",
               },
               {
-                title: "New Home Planning",
-                body: "Early-stage concept development, visualization, and pre-construction clarity for custom residential projects.",
+                title: "Bathrooms + Primary Suites",
+                body: "Spa-like spaces with better flow, quieter detailing, and the kind of restraint that makes finishes feel expensive.",
               },
               {
-                title: "3D Visualization",
-                body: "Images and model-based tools that make scale, flow, and material direction easier to understand.",
+                title: "Outdoor Living",
+                body: "Patios, terraces, entries, and garden connections that extend the house into the landscape.",
               },
               {
-                title: "Coordination Support",
-                body: "A calm bridge between design intent, budget expectations, and the technical conversations that follow.",
+                title: "Additions + Whole Home Refresh",
+                body: "Sensitive transformations that respect the existing house while making the plan feel more open and luxurious.",
               },
             ].map((item, index) => (
               <article
@@ -63,15 +63,15 @@ export default function Home() {
             <div>
               <div className="text-xs tracking-[0.22em] uppercase text-white/58">Why Homeowners Hire Us</div>
               <h2 className="mt-4 max-w-xl text-balance text-4xl leading-[1.02] tracking-[-0.04em] sm:text-5xl">
-                The website feels calm because the process behind it is disciplined.
+                The best homes feel effortless because every visible detail was considered early.
               </h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               {[
-                "Clarity around scope before expensive decisions stack up.",
-                "Visual communication that makes feedback faster and more useful.",
-                "Budget and constructability kept in the conversation from the start.",
-                "A more polished client experience than piecing together multiple disconnected consultants.",
+                "Kitchens planned for movement, light, and storage that disappears into the architecture.",
+                "Baths and suites that read soft, quiet, and luxurious without feeling overdesigned.",
+                "Outdoor rooms that connect the house to the site in a way that feels natural and lived in.",
+                "A single team that keeps the design intent coherent from concept through construction.",
               ].map((point) => (
                 <div key={point} className="rounded-3xl border border-white/10 bg-white/6 p-5">
                   <p className="text-sm leading-6 text-white/78">{point}</p>
@@ -99,15 +99,15 @@ export default function Home() {
             {[
               {
                 title: "1. Discovery",
-                body: "We learn what you want to change, what matters most, and what constraints are already visible.",
+                body: "We learn what you want to change, what style of home you want to live in, and what constraints are already visible.",
               },
               {
                 title: "2. Direction",
-                body: "Layouts, references, and visuals turn broad ideas into something you can evaluate with confidence.",
+                body: "Layouts, references, and visuals turn broad ideas into a refined residential plan you can confidently react to.",
               },
               {
                 title: "3. Coordination",
-                body: "The important technical intersections are organized early so the next stage is calmer and clearer.",
+                body: "The important technical intersections are organized early so the next stage is calmer and more buildable.",
               },
               {
                 title: "4. Build-Team Readiness",
@@ -131,8 +131,8 @@ export default function Home() {
               body: "Every major call to action routes to info@cielandstone.com so leads have a single clear entry point.",
             },
             {
-              stat: "Residential focus",
-              body: "The language and structure speak directly to homeowners instead of reading like a generic template.",
+              stat: "Luxury residential focus",
+              body: "The language and structure speak directly to homeowners planning kitchens, baths, suites, and outdoor living spaces.",
             },
             {
               stat: "Visual credibility",
@@ -155,11 +155,11 @@ export default function Home() {
             <div className="max-w-2xl">
               <div className="text-xs tracking-[0.22em] uppercase text-foreground/60">Start Here</div>
               <h2 className="mt-4 text-balance text-4xl leading-[1.02] tracking-[-0.04em] sm:text-5xl">
-                If you have a property, a plan, or even just a rough instinct, we can help you shape the next step.
+                If you have a property, a renovation idea, or a room that no longer feels right, we can shape the next step.
               </h2>
               <p className="mt-5 text-pretty text-base leading-7 text-foreground/68">
-                Send a note with your location, project type, timeline, and anything that already feels important. All
-                inquiries go directly to our studio inbox.
+                Send a note with your location, project type, timeline, and anything that already feels important.
+                All inquiries go directly to our studio inbox.
               </p>
             </div>
 

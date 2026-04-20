@@ -6,8 +6,8 @@ export function HeroSection() {
   return (
     <section className="relative flex min-h-[100dvh] items-end overflow-hidden">
       <Image
-        src="https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=2400&q=80"
-        alt="Warm residential interior designed for calm living"
+        src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2400&q=80"
+        alt="Luxury residential home exterior in a scenic setting"
         fill
         priority
         className="object-cover"
@@ -20,11 +20,11 @@ export function HeroSection() {
         <div className="max-w-3xl">
           <div className="text-xs tracking-[0.24em] uppercase text-white/70">Residential Design + Pre-Construction</div>
           <h1 className="mt-6 text-balance text-5xl leading-[0.96] tracking-[-0.04em] text-white sm:text-6xl md:text-7xl">
-            Beautiful homes move forward faster when the early decisions are clear.
+            Luxury homes start with clear decisions, calm planning, and a strong sense of place.
           </h1>
           <p className="mt-6 max-w-2xl text-pretty text-base leading-7 text-white/82 sm:text-lg">
-            Ciel &amp; Stone helps homeowners shape renovations, additions, and new homes through thoughtful design,
-            visualization, and pre-construction coordination that reduces guesswork before building begins.
+            Ciel &amp; Stone helps homeowners shape kitchens, bathrooms, bedrooms, outdoor living spaces, renovations,
+            and new homes through thoughtful design, visualization, and pre-construction coordination.
           </p>
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -38,7 +38,7 @@ export function HeroSection() {
               href="/projects"
               className="inline-flex h-12 items-center justify-center rounded-full bg-white px-6 text-sm font-medium text-black transition-opacity hover:opacity-90"
             >
-              View Projects
+              Explore Residences
             </Link>
             <a
               href="mailto:info@cielandstone.com"
@@ -50,7 +50,7 @@ export function HeroSection() {
 
           <div className="mt-14 grid gap-4 sm:grid-cols-3">
             {[
-              { label: "Project Types", value: "Renovations, additions, new homes" },
+              { label: "Project Types", value: "Kitchens, baths, suites, additions, new homes" },
               { label: "Support", value: "Design, visualization, coordination" },
               { label: "Inquiry Email", value: "info@cielandstone.com" },
             ].map((item) => (
