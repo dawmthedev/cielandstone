@@ -1,6 +1,36 @@
 import React from "react";
+import type { Metadata } from "next";
 
 import { LedProcessModel } from "@/components/process/led-process-model";
+import { siteConfig } from "@/lib/site";
+
+export const metadata: Metadata = {
+  title: "Process",
+  description:
+    "Learn how Ciel & Stone moves from inquiry and design into coordination and build readiness.",
+  alternates: {
+    canonical: "/process",
+  },
+  openGraph: {
+    title: "Process | Ciel & Stone",
+    description:
+      "A clear, residential design-build process for creating luxury homes and additions.",
+    url: `${siteConfig.url}/process`,
+    siteName: siteConfig.name,
+    images: [{ url: siteConfig.ogImage, width: 1200, height: 630, alt: siteConfig.name }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Process | Ciel & Stone",
+    description:
+      "A clear, residential design-build process for creating luxury homes and additions.",
+    images: [siteConfig.ogImage],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function ProcessPage() {
   return (

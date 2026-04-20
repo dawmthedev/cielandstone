@@ -1,10 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import React from "react";
 
 import { BIMViewerShell } from "@/components/bim/bim-viewer-shell";
 import { getProjectBySlug, projects } from "@/lib/data/projects";
+import { siteConfig } from "@/lib/site";
 
 function ExperiencePanel({
   index,
@@ -202,4 +204,35 @@ export default async function ProjectExperiencePage({ params }: { params: Promis
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const project = getProjectBySlug(slug);
+  if (!project) return {};
+
+  return {
+    title: `${project.title} Experience`,
+    description: `Immersive walkthrough for ${project.title}.`,
+    alternates: {
+      canonical: `/projects/${project.slug}/experience`,
+    },
+    openGraph: {
+      title: `${project.title} Experience | Ciel & Stone`,
+      description: `Immersive walkthrough for ${project.title}.`,
+      url: `${siteConfig.url}/projects/${project.slug}/experience`,
+      siteName: siteConfig.name,
+      images: [{ url: project.coverImage, width: 1200, height: 630, alt: project.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${project.title} Experience | Ciel & Stone`,
+      description: `Immersive walkthrough for ${project.title}.`,
+      images: [project.coverImage],
+    },
+    robots: {
+      index: false,
+      follow: true,
+    },
+  };
 }

@@ -1,6 +1,36 @@
 import React from "react";
+import type { Metadata } from "next";
 
 import { ContactForm } from "@/components/contact/contact-form";
+import { siteConfig } from "@/lib/site";
+
+export const metadata: Metadata = {
+  title: "Contact",
+  description:
+    "Request a residential design-build consultation for kitchens, baths, additions, new homes, and outdoor spaces.",
+  alternates: {
+    canonical: "/contact",
+  },
+  openGraph: {
+    title: "Contact | Ciel & Stone",
+    description:
+      "Start an inquiry with Ciel & Stone for your residential project.",
+    url: `${siteConfig.url}/contact`,
+    siteName: siteConfig.name,
+    images: [{ url: siteConfig.ogImage, width: 1200, height: 630, alt: siteConfig.name }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Contact | Ciel & Stone",
+    description:
+      "Start an inquiry with Ciel & Stone for your residential project.",
+    images: [siteConfig.ogImage],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function ContactPage() {
   return (

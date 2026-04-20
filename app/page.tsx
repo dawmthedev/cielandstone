@@ -1,9 +1,39 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import React from "react";
 
 import { HeroSection } from "@/components/home/hero-section";
 import { FeaturedProjectsScroller } from "@/components/home/featured-projects-scroller";
 import { getFeaturedProjects } from "@/lib/data/projects";
+import { siteConfig } from "@/lib/site";
+
+export const metadata: Metadata = {
+  title: "Residential Design-Build Studio",
+  description:
+    "Luxury residential design-build portfolio for kitchens, bathrooms, bedrooms, additions, and outdoor living spaces.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "Ciel & Stone | Residential Design-Build Studio",
+    description:
+      "Explore luxury residential projects, design process, and immersive portfolio walkthroughs.",
+    url: siteConfig.url,
+    siteName: siteConfig.name,
+    images: [{ url: siteConfig.ogImage, width: 1200, height: 630, alt: siteConfig.name }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ciel & Stone | Residential Design-Build Studio",
+    description:
+      "Luxury residential design-build portfolio for kitchens, bathrooms, bedrooms, additions, and outdoor living spaces.",
+    images: [siteConfig.ogImage],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function Home() {
   const featured = getFeaturedProjects();

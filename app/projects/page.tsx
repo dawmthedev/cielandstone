@@ -1,10 +1,40 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import React from "react";
 
 import { projects, getFeaturedProjects } from "@/lib/data/projects";
 import { ProjectCard } from "@/components/projects/project-card";
 import { PortfolioMediaList } from "@/components/projects/portfolio-media-list";
+import { siteConfig } from "@/lib/site";
+
+export const metadata: Metadata = {
+  title: "Portfolio",
+  description:
+    "Residential portfolio entries with story, date, main render, plans, civil plans, and a path into the walkthrough.",
+  alternates: {
+    canonical: "/projects",
+  },
+  openGraph: {
+    title: "Portfolio | Ciel & Stone",
+    description:
+      "A residential project portfolio with immersive walkthroughs and clear story-led project pages.",
+    url: `${siteConfig.url}/projects`,
+    siteName: siteConfig.name,
+    images: [{ url: siteConfig.ogImage, width: 1200, height: 630, alt: siteConfig.name }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Portfolio | Ciel & Stone",
+    description:
+      "A residential project portfolio with immersive walkthroughs and clear story-led project pages.",
+    images: [siteConfig.ogImage],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function ProjectsPage() {
   const featured = getFeaturedProjects();

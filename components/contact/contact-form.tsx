@@ -1,43 +1,14 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 
 type Status = "idle" | "submitting" | "success" | "error";
-
-function openInquiryDraft(payload: {
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  projectType: string;
-  budget: string;
-  timeline: string;
-  message: string;
-}) {
-  const subject = encodeURIComponent(`Ciel & Stone inquiry from ${payload.name}`);
-  const body = encodeURIComponent(
-    [
-      `Name: ${payload.name}`,
-      `Email: ${payload.email}`,
-      `Phone: ${payload.phone || "Not provided"}`,
-      `Location: ${payload.location}`,
-      `Project Type: ${payload.projectType}`,
-      `Budget: ${payload.budget || "Not provided"}`,
-      `Timeline: ${payload.timeline || "Not provided"}`,
-      "",
-      "Project Notes:",
-      payload.message,
-    ].join("\n"),
-  );
-
-  window.location.href = `mailto:info@cielandstone.com?subject=${subject}&body=${body}`;
-}
 
 export function ContactForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
 
-  const disabled = useMemo(() => status === "submitting", [status]);
+  const disabled = status === "submitting";
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -58,23 +29,17 @@ export function ContactForm() {
       message: String(formData.get("message") ?? ""),
     };
 
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      try {
+        const res = await fetch("/api/contact", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        });
 
-      const body = (await res.json().catch(() => null)) as { error?: string; ok?: boolean } | null;
-      if (!res.ok) {
-        if (res.status === 503) {
-          openInquiryDraft(payload);
-          form.reset();
-          setStatus("success");
-          return;
+        const body = (await res.json().catch(() => null)) as { error?: string; ok?: boolean } | null;
+        if (!res.ok) {
+          throw new Error(body?.error || "Failed to submit.");
         }
-        throw new Error(body?.error || "Failed to submit.");
-      }
 
       form.reset();
       setStatus("success");

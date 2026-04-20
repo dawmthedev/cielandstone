@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import React from "react";
 
@@ -7,6 +8,7 @@ import { PortfolioMediaList } from "@/components/projects/portfolio-media-list";
 import { ProjectDetailHero } from "@/components/projects/project-detail-hero";
 import { RelatedProjects } from "@/components/projects/related-projects";
 import { getProjectBySlug, projects } from "@/lib/data/projects";
+import { siteConfig } from "@/lib/site";
 
 export default async function ProjectDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -127,4 +129,38 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const project = getProjectBySlug(slug);
+  if (!project) return {};
+
+  const title = `${project.title} | Portfolio`;
+  const description = `${project.shortDescription} ${project.location}. Explore the story, render sequence, and immersive walkthrough.`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `/projects/${project.slug}`,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${siteConfig.url}/projects/${project.slug}`,
+      siteName: siteConfig.name,
+      images: [{ url: project.coverImage, width: 1200, height: 630, alt: project.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [project.coverImage],
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
 }
