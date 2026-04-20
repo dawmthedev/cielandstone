@@ -22,7 +22,7 @@ export default function ProjectModelPage({ params }: { params: { slug: string } 
           {project.title} — Model
         </h1>
         <p className="mt-6 max-w-2xl text-pretty text-base leading-7 text-foreground/65 sm:text-lg">
-          MVP viewer route for internal exploration. This keeps the portfolio landing stable and image-led.
+          Explore the project model in a dedicated view while keeping the main portfolio experience image-led and easy to browse.
         </p>
       </div>
 
@@ -35,8 +35,8 @@ export default function ProjectModelPage({ params }: { params: { slug: string } 
 
       <div className="mx-auto w-full max-w-6xl px-6 pb-24">
         <div className="rounded-2xl border border-black/10 bg-muted p-8 text-sm leading-6 text-foreground/65 dark:border-white/10">
-          Filtering in this MVP is based on mesh naming conventions (e.g. mesh names containing “architectural”,
-          “structural”, etc.). When you’re ready, we’ll align your export pipeline so system groups map cleanly.
+          System filtering is driven by mesh naming conventions such as architectural, structural, or plumbing. As the
+          model pipeline matures, those groupings can be aligned even more tightly with your export setup.
         </div>
       </div>
     </main>

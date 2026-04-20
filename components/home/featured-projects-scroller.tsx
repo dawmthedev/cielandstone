@@ -18,9 +18,10 @@ export function FeaturedProjectsScroller({ projects }: { projects: Project[] }) 
   const [activeIndex, setActiveIndex] = useState(0);
 
   const reduce = useMemo(() => prefersReducedMotion(), []);
+  const interactive = !reduce && projects.length > 1;
 
   useEffect(() => {
-    if (reduce) return;
+    if (!interactive) return;
     if (!rootRef.current || !trackRef.current) return;
 
     gsap.registerPlugin(ScrollTrigger);
@@ -62,7 +63,7 @@ export function FeaturedProjectsScroller({ projects }: { projects: Project[] }) 
     }, root);
 
     return () => ctx.revert();
-  }, [reduce]);
+  }, [interactive]);
 
   const goTo = (index: number) => {
     if (!rootRef.current || !trackRef.current) return;
@@ -80,7 +81,7 @@ export function FeaturedProjectsScroller({ projects }: { projects: Project[] }) 
     const max = track.scrollWidth - root.clientWidth;
     const x = Math.max(0, Math.min(max, left));
 
-    const st = ScrollTrigger.getById("featured-projects");
+    const st = interactive ? ScrollTrigger.getById("featured-projects") : null;
     if (st) {
       const progress = max === 0 ? 0 : x / max;
       st.scroll(st.start + progress * (st.end - st.start));
@@ -123,7 +124,10 @@ export function FeaturedProjectsScroller({ projects }: { projects: Project[] }) 
         </div>
       </div>
 
-      <div ref={rootRef} className="relative mt-12 overflow-hidden">
+      <div
+        ref={rootRef}
+        className={interactive ? "relative mt-12 overflow-hidden" : "relative mt-12 overflow-x-auto"}
+      >
         <div
           ref={trackRef}
           className="flex gap-6 px-6 pb-24 will-change-transform"
@@ -133,12 +137,12 @@ export function FeaturedProjectsScroller({ projects }: { projects: Project[] }) 
             <div
               key={p.slug}
               data-project-card
-              className="w-[84vw] shrink-0 md:w-[70vw] lg:w-[56vw]"
+              className={interactive ? "w-[84vw] shrink-0 md:w-[70vw] lg:w-[56vw]" : "w-[88vw] shrink-0 md:w-[48vw]"}
             >
               <ProjectCard project={p} priority={i === 0} />
             </div>
           ))}
-          <div className="w-[8vw] shrink-0" />
+          <div className={interactive ? "w-[8vw] shrink-0" : "w-6 shrink-0"} />
         </div>
       </div>
     </section>
