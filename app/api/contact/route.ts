@@ -35,7 +35,7 @@ function buildInquiryHtml(data: {
 }) {
   return `
     <div style="font-family: Helvetica, Arial, sans-serif; line-height: 1.6; color: #201814;">
-      <h2 style="margin-bottom: 16px;">New Ciel &amp; Stone Inquiry</h2>
+      <h2 style="margin-bottom: 16px;">New Ciel &amp; Stone Project Brief</h2>
       <p><strong>Name:</strong> ${escapeHtml(data.name)}</p>
       <p><strong>Email:</strong> ${escapeHtml(data.email)}</p>
       <p><strong>Phone:</strong> ${escapeHtml(data.phone || "Not provided")}</p>
@@ -52,8 +52,8 @@ function buildInquiryHtml(data: {
 function buildConfirmationHtml(data: { name: string; location: string; projectType: string }) {
   return `
     <div style="font-family: Helvetica, Arial, sans-serif; line-height: 1.6; color: #201814;">
-      <h2 style="margin-bottom: 16px;">We received your Ciel &amp; Stone inquiry</h2>
-      <p>Thanks, ${escapeHtml(data.name)}. Your inquiry for <strong>${escapeHtml(data.projectType)}</strong> in <strong>${escapeHtml(data.location)}</strong> is in our inbox.</p>
+      <h2 style="margin-bottom: 16px;">We received your Ciel &amp; Stone project brief</h2>
+      <p>Thanks, ${escapeHtml(data.name)}. Your brief for <strong>${escapeHtml(data.projectType)}</strong> in <strong>${escapeHtml(data.location)}</strong> is in our inbox.</p>
       <p>Our team will review it and reply from <strong>info@cielandstone.com</strong> soon.</p>
     </div>
   `;
@@ -159,7 +159,7 @@ export async function POST(req: Request) {
       mailgunKey,
       from,
       to: [STUDIO_EMAIL, leadEmail],
-      subject: `New inquiry from ${name}`,
+      subject: `New project brief from ${name}`,
       html,
       text,
       replyTo: email,
@@ -170,11 +170,11 @@ export async function POST(req: Request) {
       mailgunKey,
       from,
       to: [email],
-      subject: "We received your Ciel & Stone inquiry",
+      subject: "We received your Ciel & Stone project brief",
       html: buildConfirmationHtml(payload),
       text: [
         `Thanks, ${name}.`,
-        `We received your inquiry for ${projectType} in ${location}.`,
+        `We received your brief for ${projectType} in ${location}.`,
         `Our team will review it and reply from info@cielandstone.com soon.`,
       ].join("\n"),
     }),
@@ -187,7 +187,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error:
-          "We could not deliver the inquiry email right now. The lead was captured on the server; please try again or email info@cielandstone.com.",
+          "We could not deliver the project brief email right now. The lead was captured on the server; please try again or email info@cielandstone.com.",
       },
       { status: 502 },
     );

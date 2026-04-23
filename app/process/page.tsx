@@ -7,7 +7,7 @@ import { siteConfig } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Process",
   description:
-    "Learn how Ciel & Stone moves from inquiry and design into coordination and build readiness.",
+    "Learn how Ciel & Stone moves from discovery and planning into design and build readiness.",
   alternates: {
     canonical: "/process",
   },
@@ -38,49 +38,49 @@ export default function ProcessPage() {
       <LedProcessModel
         steps={[
           {
-            key: "inquire",
-            title: "Inquiry",
-            summary: "A short conversation to understand your goals, your property, and your budget comfort zone.",
+            key: "discover",
+            title: "Discovery",
+            summary: "We start by understanding the house, the priorities, and the practical constraints.",
             details: [
-              "You share what you want to build, improve, or plan for in the home.",
-              "We identify early constraints around site, scope, timing, and investment.",
-              "If the fit is right, we outline a clear next step so expectations are visible from the start.",
+              "You share what you want to change and what matters most to you.",
+              "We identify early constraints around scope, timing, budget, and site conditions.",
+              "The next step is framed clearly so expectations stay visible from the start.",
             ],
           },
           {
-            key: "align",
-            title: "Alignment",
-            summary: "We define scope, priorities, and a realistic path forward.",
+            key: "plan",
+            title: "Planning",
+            summary: "Scope and investment are organized before design decisions become difficult to unwind.",
             details: [
-              "The project scope is organized so major decisions are easier to evaluate.",
+              "The project scope is clarified so major decisions are easier to evaluate.",
               "Budget visibility stays part of the conversation as priorities take shape.",
-              "A simple approval rhythm keeps the process calm and transparent.",
+              "A measured approval rhythm keeps the process calm and transparent.",
             ],
           },
           {
             key: "design",
-            title: "Design + Visualization",
-            summary: "Ideas become drawings, models, and options you can clearly react to.",
+            title: "Design",
+            summary: "Ideas become drawings, details, and options you can actually respond to.",
             details: [
               "We study layout, flow, light, and material direction in a practical way.",
-              "Visual tools help homeowners understand the design before committing to major choices.",
-              "Options stay focused so the project remains buildable and aligned with budget goals.",
+              "Visual tools help you understand the design before committing to major choices.",
+              "Options stay focused so the project remains buildable and aligned with the budget.",
             ],
           },
           {
             key: "coordinate",
-            title: "Coordination",
-            summary: "Project coordination that helps reduce confusion later.",
+            title: "Preconstruction",
+            summary: "Technical details are resolved early so the site phase is steadier and more predictable.",
             details: [
-              "Important intersections are reviewed early so problems are easier to spot before construction.",
+              "Important intersections are reviewed before they become expensive site issues.",
               "Constructability and sequencing are considered as the project is developed.",
-              "The technical depth stays behind the scenes while the client experience stays clear and approachable.",
+              "The technical depth stays organized behind the scenes while the experience stays clear.",
             ],
           },
           {
             key: "build",
             title: "Build",
-            summary: "A more prepared handoff into construction.",
+            summary: "The project enters construction with a clearer set of expectations.",
             details: [
               "Drawings, selections, and planning are organized to support the next stage of the project.",
               "Key finish and detail decisions are clarified before they become site issues.",

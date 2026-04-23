@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils/cn";
 const nav = [
   { href: "/projects", label: "Portfolio" },
   { href: "/process", label: "Process" },
+  { href: "/feasibility", label: "Feasibility" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -19,11 +20,11 @@ export function Navbar() {
   return (
     <header className="fixed inset-x-0 top-0 z-50">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[rgba(22,18,15,0.58)] via-[rgba(22,18,15,0.18)] to-transparent" />
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6 sm:py-5">
         <Link
           href="/"
           onClick={() => setOpen(false)}
-          className="pointer-events-auto inline-flex items-baseline gap-3 text-sm tracking-[0.18em] uppercase text-white"
+          className="pointer-events-auto inline-flex items-baseline gap-2 text-sm tracking-[0.18em] uppercase text-white sm:gap-3"
         >
           <span className="font-semibold">Ciel</span>
           <span className="opacity-70">&</span>
@@ -48,11 +49,11 @@ export function Navbar() {
             );
           })}
             <Link
-              href="/contact"
+              href="/feasibility"
               onClick={() => setOpen(false)}
               className="inline-flex h-11 items-center justify-center rounded-full bg-white px-5 text-xs font-medium tracking-[0.18em] uppercase text-black"
             >
-            Start Inquiry
+              Feasibility Read
           </Link>
         </nav>
 
@@ -74,11 +75,11 @@ export function Navbar() {
 
       <div
         className={cn(
-          "mx-4 overflow-hidden rounded-3xl border border-white/10 bg-[var(--panel)] shadow-[0_24px_80px_rgba(31,22,16,0.18)] backdrop-blur-xl md:hidden",
+          "mx-3 overflow-hidden rounded-3xl border border-white/10 bg-[var(--panel)] shadow-[0_24px_80px_rgba(31,22,16,0.18)] backdrop-blur-xl sm:mx-4 md:hidden",
           open ? "pointer-events-auto max-h-[420px] opacity-100" : "pointer-events-none max-h-0 opacity-0",
         )}
       >
-        <div className="grid gap-2 p-4">
+        <div className="grid gap-2 p-3 sm:p-4">
           {nav.map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
@@ -99,7 +100,7 @@ export function Navbar() {
             href="mailto:info@cielandstone.com"
             className="mt-2 inline-flex h-12 items-center justify-center rounded-full bg-[var(--accent-strong)] px-5 text-xs font-medium tracking-[0.18em] uppercase text-[var(--accent-contrast)]"
           >
-            Email Info@Cielandstone.com
+            Email the Studio
           </a>
         </div>
       </div>

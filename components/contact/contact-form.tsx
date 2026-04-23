@@ -53,9 +53,9 @@ export function ContactForm() {
   };
 
   return (
-    <div className="rounded-[30px] border border-black/10 bg-[var(--panel)] p-8 shadow-[0_24px_80px_rgba(43,27,17,0.08)] backdrop-blur dark:border-white/10">
-      <div className="text-xs tracking-[0.22em] uppercase text-foreground/60">Inquiry Form</div>
-      <div className="relative mt-4 min-h-[640px] overflow-hidden rounded-[28px] border border-black/8 bg-background/55 p-5 backdrop-blur dark:border-white/10 dark:bg-white/5 sm:p-6">
+    <div className="rounded-[30px] border border-black/10 bg-[var(--panel)] p-5 shadow-[0_24px_80px_rgba(43,27,17,0.08)] backdrop-blur dark:border-white/10 sm:p-8">
+      <div className="text-xs tracking-[0.22em] uppercase text-foreground/60">Project Brief</div>
+      <div className="relative mt-4 min-h-[540px] overflow-hidden rounded-[28px] border border-black/8 bg-background/55 p-4 backdrop-blur dark:border-white/10 dark:bg-white/5 sm:min-h-[640px] sm:p-6">
         <div
           className={[
             "grid gap-8 transition-all duration-500 ease-out",
@@ -70,7 +70,7 @@ export function ContactForm() {
           </div>
 
           <form onSubmit={onSubmit} className="grid gap-4">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2">
                 <span className="text-xs tracking-[0.22em] uppercase text-foreground/60">Name</span>
                 <input
@@ -112,7 +112,7 @@ export function ContactForm() {
               </label>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <label className="grid gap-2">
                 <span className="text-xs tracking-[0.22em] uppercase text-foreground/60">Project Type</span>
                 <select
@@ -167,15 +167,15 @@ export function ContactForm() {
               <button
                 type="submit"
                 disabled={disabled}
-                className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--accent-strong)] px-6 text-sm font-medium text-[var(--accent-contrast)] transition-opacity hover:opacity-92 disabled:opacity-60"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--accent-strong)] px-6 text-sm font-medium text-[var(--accent-contrast)] transition-opacity hover:opacity-92 disabled:opacity-60 sm:self-start"
               >
-                {status === "submitting" ? "Sending Inquiry..." : "Send Inquiry"}
+                {status === "submitting" ? "Sending..." : "Start your project"}
               </button>
 
               {status === "error" ? (
                 <div className="text-sm text-red-500/90">{error}</div>
               ) : (
-                <div className="text-sm text-foreground/55">Prefer direct email? info@cielandstone.com</div>
+                <div className="text-sm text-foreground/55 sm:text-right">Prefer direct email? info@cielandstone.com</div>
               )}
             </div>
           </form>
@@ -187,16 +187,16 @@ export function ContactForm() {
             status === "success" ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0",
           ].join(" ")}
         >
-          <div className="w-full max-w-xl rounded-[28px] border border-black/10 bg-[var(--panel)] p-8 text-center shadow-[0_24px_80px_rgba(43,27,17,0.08)] backdrop-blur dark:border-white/10">
+          <div className="w-full max-w-xl rounded-[28px] border border-black/10 bg-[var(--panel)] p-6 text-center shadow-[0_24px_80px_rgba(43,27,17,0.08)] backdrop-blur dark:border-white/10 sm:p-8">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent-strong)]/15 text-[var(--accent-strong)]">
               ✓
             </div>
             <h3 className="mt-6 text-balance text-3xl leading-[1.05] tracking-[-0.03em]">
-              {deliveryState === "delivered" ? "Inquiry sent." : "Inquiry captured."}
+              {deliveryState === "delivered" ? "Request sent." : "Request captured."}
             </h3>
             <p className="mt-4 text-sm leading-6 text-foreground/65">
               {deliveryState === "delivered"
-                ? "Your inquiry was delivered to info@cielandstone.com and lead@cielandstone.com. You should also receive a confirmation email shortly."
+                ? "Your request was delivered to info@cielandstone.com and lead@cielandstone.com. You should also receive a confirmation email shortly."
                 : "We captured your request. Once Mailgun is configured in Vercel, this will be delivered to info@cielandstone.com and lead@cielandstone.com with a confirmation to the submitter."}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
@@ -211,7 +211,7 @@ export function ContactForm() {
                 onClick={() => setStatus("idle")}
                 className="inline-flex h-12 items-center justify-center rounded-full border border-black/12 px-6 text-sm font-medium text-foreground/85 dark:border-white/12"
               >
-                Send Another Inquiry
+                Start Over
               </button>
             </div>
           </div>

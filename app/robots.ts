@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: ["/"],
-      disallow: ["/api/", "/projects/*/experience", "/projects/*/model"],
+      disallow: ["/api/", "/studio", "/studio/*", "/projects/*/experience", "/projects/*/model"],
     },
     sitemap: "https://cielandstone.com/sitemap.xml",
   };

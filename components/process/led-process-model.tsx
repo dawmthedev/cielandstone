@@ -28,13 +28,13 @@ export function LedProcessModel({ steps }: { steps: Step[] }) {
   return (
     <section className="mx-auto w-full max-w-6xl px-6 pb-24 pt-32">
       <header className="max-w-3xl">
-        <div className="text-xs tracking-[0.22em] uppercase text-foreground/60">Our Process</div>
+        <div className="text-xs tracking-[0.22em] uppercase text-foreground/60">Process</div>
         <h1 className="mt-4 text-balance text-4xl font-medium leading-[1.02] tracking-[-0.03em] sm:text-6xl">
-          A clear path from intent to built reality.
+          A clear path from discovery to build.
         </h1>
         <p className="mt-6 text-pretty text-base leading-7 text-foreground/65 sm:text-lg">
-          We keep collaboration simple: we align early, coordinate deeply where it matters, and execute with a calm,
-          disciplined cadence.
+          We move deliberately: discover the brief, plan the work, refine the design, and carry the project forward
+          with a calm, transparent cadence.
         </p>
       </header>
 
@@ -144,17 +144,14 @@ export function LedProcessModel({ steps }: { steps: Step[] }) {
             <div className="text-xs tracking-[0.22em] uppercase text-foreground/60">What you can expect</div>
             <div className="mt-6 grid gap-6">
               {[
+                { t: "Discovery", b: "We begin with the property, the goals, and the realities that shape the brief." },
                 {
-                  t: "Fast clarity",
-                  b: "We define scope, constraints, and priorities early—so decisions stay simple later.",
+                  t: "Planning",
+                  b: "Cost, scope, and sequence are clarified before decisions begin to compound.",
                 },
                 {
-                  t: "No handoffs",
-                  b: "Design, coordination, and build execution stay aligned under one team.",
-                },
-                {
-                  t: "Calm momentum",
-                  b: "A disciplined schedule and trade coordination that protects the design intent.",
+                  t: "Build",
+                  b: "The project moves forward with clearer documentation and fewer avoidable surprises.",
                 },
               ].map((x) => (
                 <div key={x.t} className="rounded-2xl border border-black/10 bg-muted p-6 dark:border-white/10 dark:bg-white/5">

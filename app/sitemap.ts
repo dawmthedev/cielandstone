@@ -5,11 +5,11 @@ import { projects } from "@/lib/data/projects";
 const baseUrl = "https://cielandstone.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const staticRoutes = ["", "/projects", "/process", "/contact"].map((path) => ({
+  const staticRoutes = ["", "/projects", "/process", "/feasibility", "/contact"].map((path) => ({
     url: `${baseUrl}${path}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
-    priority: path === "" ? 1 : 0.8,
+    priority: path === "" ? 1 : path === "/feasibility" ? 0.9 : 0.8,
   }));
 
   const projectRoutes = projects.flatMap((project) => [
