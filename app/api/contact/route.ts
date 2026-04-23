@@ -1,4 +1,14 @@
 import { NextResponse } from "next/server";
+import {
+  deliverLead,
+  escapeHtml,
+  extractSourceFromPayload,
+  formatSourceHtml,
+  formatSourceText,
+  isValidEmail,
+  leadErrorResponse,
+  type LeadRecord,
+} from "@/lib/lead-capture";
 
 const STUDIO_EMAIL = "info@cielandstone.com";
 const DEFAULT_LEAD_EMAIL = "lead@cielandstone.com";
@@ -12,18 +22,29 @@ type ContactPayload = {
   budget?: string;
   timeline?: string;
   message?: string;
+  /** Marketing source attribution (UTMs, referrer, landing page). */
+  source?: Record<string, unknown>;
 };
 
-function escapeHtml(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+// Very small in-memory rate limit per-IP. Sufficient guardrail against casual
+// form-spam once ads start running. For heavier load, swap in Upstash/Redis.
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX = 5;
+const ipHits = new Map<string, { count: number; windowStart: number }>();
+
+function rateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = ipHits.get(ip);
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    ipHits.set(ip, { count: 1, windowStart: now });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count += 1;
+  return true;
 }
 
-function buildInquiryHtml(data: {
+function buildStudioHtml(data: {
   name: string;
   email: string;
   phone: string;
@@ -32,6 +53,7 @@ function buildInquiryHtml(data: {
   budget: string;
   timeline: string;
   message: string;
+  sourceHtml: string;
 }) {
   return `
     <div style="font-family: Helvetica, Arial, sans-serif; line-height: 1.6; color: #201814;">
@@ -45,6 +67,7 @@ function buildInquiryHtml(data: {
       <p><strong>Timeline:</strong> ${escapeHtml(data.timeline || "Not provided")}</p>
       <p><strong>Project Notes:</strong></p>
       <p>${escapeHtml(data.message).replaceAll("\n", "<br />")}</p>
+      ${data.sourceHtml}
     </div>
   `;
 }
@@ -59,45 +82,12 @@ function buildConfirmationHtml(data: { name: string; location: string; projectTy
   `;
 }
 
-async function sendMailgunMessage({
-  mailgunBaseUrl,
-  mailgunDomain,
-  mailgunKey,
-  from,
-  to,
-  subject,
-  html,
-  text,
-  replyTo,
-}: {
-  mailgunBaseUrl: string;
-  mailgunDomain: string;
-  mailgunKey: string;
-  from: string;
-  to: string[];
-  subject: string;
-  html: string;
-  text: string;
-  replyTo?: string;
-}) {
-  const form = new FormData();
-  form.append("from", from);
-  form.append("to", to.join(","));
-  form.append("subject", subject);
-  form.append("text", text);
-  form.append("html", html);
-  if (replyTo) form.append("h:Reply-To", replyTo);
-
-  return fetch(`${mailgunBaseUrl}/v3/${mailgunDomain}/messages`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`api:${mailgunKey}`).toString("base64")}`,
-    },
-    body: form,
-  });
-}
-
 export async function POST(req: Request) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
+  if (!rateLimit(ip)) {
+    return NextResponse.json({ error: "Too many requests. Please try again in a minute." }, { status: 429 });
+  }
+
   const body = (await req.json().catch(() => null)) as ContactPayload | null;
 
   const name = (body?.name ?? "").trim();
@@ -116,28 +106,18 @@ export async function POST(req: Request) {
     );
   }
 
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  if (!emailOk) {
+  if (!isValidEmail(email)) {
     return NextResponse.json({ error: "Please provide a valid email address." }, { status: 400 });
   }
 
-  const mailgunKey = process.env.MAILGUN_API_KEY?.trim();
-  const mailgunDomain = process.env.MAILGUN_DOMAIN?.trim();
-  const mailgunBaseUrl = (process.env.MAILGUN_BASE_URL || "https://api.mailgun.net").replace(/\/$/, "");
-  const from = process.env.MAILGUN_FROM || `Ciel & Stone <postmaster@${mailgunDomain || "mg.cielandstone.com"}>`;
+  const source = extractSourceFromPayload((body ?? {}) as Record<string, unknown>);
+  const sourceHtml = formatSourceHtml(source);
+  const sourceText = formatSourceText(source);
+
   const leadEmail = process.env.MAILGUN_LEAD_EMAIL?.trim() || DEFAULT_LEAD_EMAIL;
 
-  const payload = { name, email, phone, location, projectType, budget, timeline, message };
-  const html = buildInquiryHtml(payload);
-
-  if (!mailgunKey || !mailgunDomain) {
-    console.log("[contact:queued]", {
-      to: STUDIO_EMAIL,
-      ...payload,
-      note: "MAILGUN_API_KEY or MAILGUN_DOMAIN missing; capture recorded in logs only.",
-    });
-    return NextResponse.json({ ok: true, queued: true });
-  }
+  const payload = { name, email, phone, location, projectType, budget, timeline, message, sourceHtml };
+  const html = buildStudioHtml(payload);
 
   const text = [
     `Name: ${name}`,
@@ -150,57 +130,53 @@ export async function POST(req: Request) {
     "",
     "Project Notes:",
     message,
-  ].join("\n");
+    "",
+    sourceText ? "— Lead Source —" : "",
+    sourceText,
+  ].filter(Boolean).join("\n");
 
-  const [leadResponse, confirmationResponse] = await Promise.all([
-    sendMailgunMessage({
-      mailgunBaseUrl,
-      mailgunDomain,
-      mailgunKey,
-      from,
-      to: [STUDIO_EMAIL, leadEmail],
-      subject: `New project brief from ${name}`,
-      html,
-      text,
-      replyTo: email,
-    }),
-    sendMailgunMessage({
-      mailgunBaseUrl,
-      mailgunDomain,
-      mailgunKey,
-      from,
-      to: [email],
-      subject: "We received your Ciel & Stone project brief",
-      html: buildConfirmationHtml(payload),
-      text: [
-        `Thanks, ${name}.`,
-        `We received your brief for ${projectType} in ${location}.`,
-        `Our team will review it and reply from info@cielandstone.com soon.`,
-      ].join("\n"),
-    }),
-  ]);
+  const record: LeadRecord = {
+    type: "contact",
+    timestamp: new Date().toISOString(),
+    source,
+    data: { name, email, phone, location, projectType, budget, timeline, message },
+  };
 
-  if (!leadResponse.ok || !confirmationResponse.ok) {
-    const leadError = await leadResponse.text().catch(() => "");
-    const confirmError = await confirmationResponse.text().catch(() => "");
-    console.error("[contact:mailgun-error]", { leadError, confirmError });
-    return NextResponse.json(
-      {
-        error:
-          "We could not deliver the project brief email right now. The lead was captured on the server; please try again or email info@cielandstone.com.",
-      },
-      { status: 502 },
-    );
-  }
+  // Subject carries the service/location when they're present — makes the
+  // inbox scannable once ad leads start flowing.
+  const subjectTag = source.service && source.location
+    ? `[${source.service}/${source.location}] `
+    : source.service
+    ? `[${source.service}] `
+    : "";
+  const subject = `${subjectTag}New project brief from ${name}`;
 
-  console.log("[contact:delivered]", {
+  const result = await deliverLead({
+    type: "contact",
+    subject,
+    studioHtml: html,
+    studioText: text,
+    confirmationHtml: buildConfirmationHtml({ name, location, projectType }),
+    confirmationText: [
+      `Thanks, ${name}.`,
+      `We received your brief for ${projectType} in ${location}.`,
+      `Our team will review it and reply from info@cielandstone.com soon.`,
+    ].join("\n"),
     to: [STUDIO_EMAIL, leadEmail],
-    provider: "mailgun",
-    name,
-    email,
-    location,
-    projectType,
+    confirmationTo: [email],
+    replyTo: email,
+    tag: "contact-form",
+    record,
   });
 
-  return NextResponse.json({ ok: true, delivered: true });
+  if (!result.anyOk) {
+    return leadErrorResponse(result.errors);
+  }
+
+  return NextResponse.json({
+    ok: true,
+    delivered: result.mailgunOk,
+    webhookDelivered: result.webhookOk,
+    queued: !result.mailgunOk && (result.webhookOk || result.diskOk),
+  });
 }

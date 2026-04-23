@@ -29,15 +29,33 @@ export function Footer() {
         <div className="space-y-3">
           <div className="text-xs tracking-[0.22em] uppercase text-foreground/80">Services</div>
           <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-foreground/70 md:flex-col md:gap-2">
-            <div>Design-Build</div>
-            <div>Consultation</div>
-            <div>Project Planning</div>
+            <Link href="/services/kitchens" className="hover:text-foreground">
+              Kitchens
+            </Link>
+            <Link href="/services/bathrooms" className="hover:text-foreground">
+              Bathrooms
+            </Link>
+            <Link href="/services/pools-spas" className="hover:text-foreground">
+              Pools & Spas
+            </Link>
+            <Link href="/services/additions" className="hover:text-foreground">
+              Additions
+            </Link>
+            <Link href="/services/adus" className="hover:text-foreground">
+              ADUs & Guest Houses
+            </Link>
+            <Link href="/services/whole-home" className="hover:text-foreground">
+              Whole-Home Renovation
+            </Link>
+            <Link href="/services" className="hover:text-foreground text-foreground/50">
+              All services →
+            </Link>
           </div>
         </div>
         <div className="space-y-3">
           <div className="text-xs tracking-[0.22em] uppercase text-foreground/80">Inquiries</div>
           <div className="text-sm leading-6 text-foreground/70">
-            <div>Los Angeles / Pacific Northwest</div>
+            <div>Los Angeles · Portland · Seattle</div>
             <a href="mailto:info@cielandstone.com" className="hover:text-foreground">
               info@cielandstone.com
             </a>

@@ -2,6 +2,9 @@
 
 import React, { useMemo, useState } from "react";
 
+import { trackFormSubmit } from "@/lib/analytics";
+import { useLeadSource, withSource } from "@/lib/use-lead-source";
+
 type Role = "homeowner" | "architect" | "designer" | "developer" | "other";
 type Scope =
   | "whole-home"
@@ -295,6 +298,7 @@ export function FeasibilityStudio() {
   const [status, setStatus] = useState<SubmitStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [read, setRead] = useState<FeasibilityRead | null>(null);
+  const source = useLeadSource();
 
   const totalSteps = STEP_LABELS.length;
   const pct = Math.round(((step + 1) / totalSteps) * 100);
@@ -348,17 +352,29 @@ export function FeasibilityStudio() {
     const generated = buildRead(state);
 
     try {
-      const res = await fetch("/api/feasibility", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
+      const payload = withSource(
+        {
           ...state,
           score: computeScore(state),
           tier: generated.tier,
-        }),
+        },
+        source,
+        { service: state.scope || undefined, location: state.region || undefined },
+      );
+      const res = await fetch("/api/feasibility", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
       });
       const body = (await res.json().catch(() => null)) as { error?: string; ok?: boolean } | null;
       if (!res.ok) throw new Error(body?.error || "Submission failed.");
+      trackFormSubmit({
+        form: "feasibility",
+        tier: generated.tier,
+        service: state.scope,
+        location: state.region,
+        email: state.email,
+      });
       setRead(generated);
       setStatus("success");
     } catch (err) {

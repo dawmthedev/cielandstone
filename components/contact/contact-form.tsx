@@ -2,12 +2,49 @@
 
 import React, { useState } from "react";
 
+import { trackFormSubmit } from "@/lib/analytics";
+import { useLeadSource, withSource } from "@/lib/use-lead-source";
+
 type Status = "idle" | "submitting" | "success" | "error";
 
-export function ContactForm() {
+type ContactFormProps = {
+  /** Optional pre-selected service (for landing pages). */
+  defaultService?: string;
+  /** Optional pre-selected location (for landing pages). */
+  defaultLocation?: string;
+  /** Optional override for the project-type dropdown options. */
+  projectTypeOptions?: string[];
+  /** Override the submit button label. */
+  submitLabel?: string;
+  /** Compact variant for in-page / landing embeds. */
+  compact?: boolean;
+};
+
+const DEFAULT_PROJECT_TYPES = [
+  "Renovation",
+  "Addition",
+  "New Home",
+  "Kitchen",
+  "Bathroom",
+  "Pool / Spa",
+  "Outdoor Living",
+  "Home Theater",
+  "Wine Cellar",
+  "Wellness / Spa Suite",
+  "Feasibility / Planning",
+];
+
+export function ContactForm({
+  defaultService,
+  defaultLocation,
+  projectTypeOptions = DEFAULT_PROJECT_TYPES,
+  submitLabel = "Start your project",
+  compact = false,
+}: ContactFormProps = {}) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [deliveryState, setDeliveryState] = useState<"delivered" | "queued" | null>(null);
+  const source = useLeadSource();
 
   const disabled = status === "submitting";
 
@@ -20,16 +57,21 @@ export function ContactForm() {
     const form = e.currentTarget;
     const formData = new FormData(form);
 
-    const payload = {
+    const base = {
       name: String(formData.get("name") ?? ""),
       email: String(formData.get("email") ?? ""),
       phone: String(formData.get("phone") ?? ""),
-      location: String(formData.get("location") ?? ""),
+      location: String(formData.get("location") ?? "") || defaultLocation || "",
       projectType: String(formData.get("projectType") ?? ""),
       budget: String(formData.get("budget") ?? ""),
       timeline: String(formData.get("timeline") ?? ""),
       message: String(formData.get("message") ?? ""),
     };
+
+    const payload = withSource(base, source, {
+      service: defaultService,
+      location: defaultLocation,
+    });
 
     try {
       const res = await fetch("/api/contact", {
@@ -44,6 +86,12 @@ export function ContactForm() {
       }
 
       form.reset();
+      trackFormSubmit({
+        form: "contact",
+        service: defaultService,
+        location: defaultLocation,
+        email: base.email,
+      });
       setDeliveryState(body?.delivered ? "delivered" : body?.queued ? "queued" : null);
       setStatus("success");
     } catch (err) {
@@ -107,6 +155,8 @@ export function ContactForm() {
                   name="location"
                   required
                   disabled={disabled}
+                  defaultValue={defaultLocation ?? ""}
+                  placeholder={defaultLocation ? "" : "City or neighborhood"}
                   className="h-12 rounded-xl border border-black/10 bg-background px-4 text-sm outline-none focus:border-black/20 dark:border-white/10 dark:bg-white/5"
                 />
               </label>
@@ -120,15 +170,16 @@ export function ContactForm() {
                   required
                   disabled={disabled}
                   className="h-12 rounded-xl border border-black/10 bg-background px-4 text-sm outline-none focus:border-black/20 dark:border-white/10 dark:bg-white/5"
-                  defaultValue=""
+                  defaultValue={defaultService ?? ""}
                 >
                   <option value="" disabled>
                     Select one
                   </option>
-                  <option value="Renovation">Renovation</option>
-                  <option value="Addition">Addition</option>
-                  <option value="New Home">New Home</option>
-                  <option value="Feasibility / Planning">Feasibility / Planning</option>
+                  {projectTypeOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
                 </select>
               </label>
               <label className="grid gap-2">
@@ -169,7 +220,7 @@ export function ContactForm() {
                 disabled={disabled}
                 className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--accent-strong)] px-6 text-sm font-medium text-[var(--accent-contrast)] transition-opacity hover:opacity-92 disabled:opacity-60 sm:self-start"
               >
-                {status === "submitting" ? "Sending..." : "Start your project"}
+                {status === "submitting" ? "Sending..." : submitLabel}
               </button>
 
               {status === "error" ? (
@@ -196,8 +247,8 @@ export function ContactForm() {
             </h3>
             <p className="mt-4 text-sm leading-6 text-foreground/65">
               {deliveryState === "delivered"
-                ? "Your request was delivered to info@cielandstone.com and lead@cielandstone.com. You should also receive a confirmation email shortly."
-                : "We captured your request. Once Mailgun is configured in Vercel, this will be delivered to info@cielandstone.com and lead@cielandstone.com with a confirmation to the submitter."}
+                ? "Your request was delivered to info@cielandstone.com. You should also receive a confirmation email shortly."
+                : "Your request was captured. We'll follow up from info@cielandstone.com shortly — if you don't hear back within two business days, reach out directly."}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <a

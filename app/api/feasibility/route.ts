@@ -1,4 +1,14 @@
 import { NextResponse } from "next/server";
+import {
+  deliverLead,
+  escapeHtml,
+  extractSourceFromPayload,
+  formatSourceHtml,
+  formatSourceText,
+  isValidEmail,
+  leadErrorResponse,
+  type LeadRecord,
+} from "@/lib/lead-capture";
 
 const STUDIO_EMAIL = "info@cielandstone.com";
 const DEFAULT_LEAD_EMAIL = "lead@cielandstone.com";
@@ -20,18 +30,26 @@ type FeasibilityPayload = {
   referral?: string;
   score?: number;
   tier?: Tier;
+  source?: Record<string, unknown>;
 };
 
-function escapeHtml(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_MAX = 4;
+const ipHits = new Map<string, { count: number; windowStart: number }>();
+
+function rateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = ipHits.get(ip);
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    ipHits.set(ip, { count: 1, windowStart: now });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count += 1;
+  return true;
 }
 
-function buildStudioHtml(data: FeasibilityPayload & { tierLabel: string }) {
+function buildStudioHtml(data: FeasibilityPayload & { tierLabel: string; sourceHtml: string }) {
   const rows = [
     ["Tier", `${data.tier ?? "—"} · ${data.tierLabel}`],
     ["Score", String(data.score ?? "—")],
@@ -69,6 +87,7 @@ function buildStudioHtml(data: FeasibilityPayload & { tierLabel: string }) {
             )}</div></div>`
           : ""
       }
+      ${data.sourceHtml}
     </div>
   `;
 }
@@ -87,40 +106,6 @@ function buildLeadConfirmationHtml(data: FeasibilityPayload & { tierLabel: strin
   `;
 }
 
-async function sendMailgunMessage(args: {
-  mailgunBaseUrl: string;
-  mailgunDomain: string;
-  mailgunKey: string;
-  from: string;
-  to: string[];
-  subject: string;
-  html: string;
-  text: string;
-  replyTo?: string;
-  priority?: boolean;
-}) {
-  const form = new FormData();
-  form.append("from", args.from);
-  form.append("to", args.to.join(","));
-  form.append("subject", args.subject);
-  form.append("text", args.text);
-  form.append("html", args.html);
-  if (args.replyTo) form.append("h:Reply-To", args.replyTo);
-  if (args.priority) {
-    form.append("h:X-Priority", "1");
-    form.append("h:Importance", "High");
-    form.append("o:tag", "tier-a");
-  }
-
-  return fetch(`${args.mailgunBaseUrl}/v3/${args.mailgunDomain}/messages`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`api:${args.mailgunKey}`).toString("base64")}`,
-    },
-    body: form,
-  });
-}
-
 function tierLabel(tier: Tier | undefined): string {
   if (tier === "A") return "Priority fit — studio response within 24 hours";
   if (tier === "B") return "Strong fit — Feasibility Read recommended";
@@ -128,36 +113,33 @@ function tierLabel(tier: Tier | undefined): string {
 }
 
 export async function POST(req: Request) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
+  if (!rateLimit(ip)) {
+    return NextResponse.json({ error: "Too many requests. Please try again in a minute." }, { status: 429 });
+  }
+
   const body = (await req.json().catch(() => null)) as FeasibilityPayload | null;
 
   const name = (body?.name ?? "").trim();
   const email = (body?.email ?? "").trim();
 
   if (!name || !email) {
-    return NextResponse.json(
-      { error: "Please provide your name and email." },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Please provide your name and email." }, { status: 400 });
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!isValidEmail(email)) {
     return NextResponse.json({ error: "Please provide a valid email address." }, { status: 400 });
   }
 
   const tier: Tier = body?.tier === "A" || body?.tier === "B" || body?.tier === "C" ? body.tier : "C";
   const label = tierLabel(tier);
 
-  const mailgunKey = process.env.MAILGUN_API_KEY?.trim();
-  const mailgunDomain = process.env.MAILGUN_DOMAIN?.trim();
-  const mailgunBaseUrl = (process.env.MAILGUN_BASE_URL || "https://api.mailgun.net").replace(/\/$/, "");
-  const from = process.env.MAILGUN_FROM || `Ciel & Stone <postmaster@${mailgunDomain || "mg.cielandstone.com"}>`;
+  const source = extractSourceFromPayload((body ?? {}) as Record<string, unknown>);
+  const sourceHtml = formatSourceHtml(source);
+  const sourceText = formatSourceText(source);
+
   const leadEmail = process.env.MAILGUN_LEAD_EMAIL?.trim() || DEFAULT_LEAD_EMAIL;
 
-  const payload = { ...body, name, email, tierLabel: label };
-
-  if (!mailgunKey || !mailgunDomain) {
-    console.log("[feasibility:queued]", { to: STUDIO_EMAIL, tier, ...payload });
-    return NextResponse.json({ ok: true, queued: true, tier });
-  }
+  const payload = { ...body, name, email, tierLabel: label, sourceHtml };
 
   const text = [
     `New Feasibility Read intake`,
@@ -178,69 +160,64 @@ export async function POST(req: Request) {
     ``,
     `Property: ${body?.propertyAddress || "—"}`,
     `Notes: ${body?.propertyNotes || "—"}`,
-  ].join("\n");
+    ``,
+    sourceText ? "— Lead Source —" : "",
+    sourceText,
+  ].filter(Boolean).join("\n");
 
   const tag = tier === "A" ? "tier-a" : tier === "B" ? "tier-b" : "tier-c";
 
-  const [leadResponse, confirmationResponse] = await Promise.all([
-    sendMailgunMessage({
-      mailgunBaseUrl,
-      mailgunDomain,
-      mailgunKey,
-      from,
-      to: [STUDIO_EMAIL, leadEmail],
-      subject:
-        tier === "A"
-          ? `[Priority · Tier A] ${name} — ${body?.scope ?? "Project"} in ${body?.region ?? "region"}`
-          : `[Tier ${tier}] ${name} — ${body?.scope ?? "Project"}${body?.region ? ` · ${body.region}` : ""}`,
-      html: buildStudioHtml({ ...payload, tierLabel: label }),
-      text,
-      replyTo: email,
-      priority: tier === "A",
-    }),
-    sendMailgunMessage({
-      mailgunBaseUrl,
-      mailgunDomain,
-      mailgunKey,
-      from,
-      to: [email],
-      subject: "Your Ciel & Stone Feasibility Read is in our inbox",
-      html: buildLeadConfirmationHtml({ ...payload, tierLabel: label }),
-      text: [
-        `Thanks, ${name}.`,
-        ``,
-        `We received your Feasibility Read intake.`,
-        `Status: ${label}.`,
-        ``,
-        `Expect a follow-up from info@cielandstone.com within 24 hours for priority-fit projects, 1–2 business days otherwise.`,
-        ``,
-        `— Ciel & Stone`,
-      ].join("\n"),
-    }),
-  ]);
+  const subject =
+    tier === "A"
+      ? `[Priority · Tier A] ${name} — ${body?.scope ?? "Project"} in ${body?.region ?? "region"}`
+      : `[Tier ${tier}] ${name} — ${body?.scope ?? "Project"}${body?.region ? ` · ${body.region}` : ""}`;
 
-  if (!leadResponse.ok || !confirmationResponse.ok) {
-    const leadError = await leadResponse.text().catch(() => "");
-    const confirmError = await confirmationResponse.text().catch(() => "");
-    console.error("[feasibility:mailgun-error]", { leadError, confirmError });
-    return NextResponse.json(
-      {
-        error:
-          "We could not deliver the Feasibility Read email right now. Your intake was captured; please try again or email info@cielandstone.com.",
-      },
-      { status: 502 },
-    );
-  }
+  const record: LeadRecord = {
+    type: "feasibility",
+    timestamp: new Date().toISOString(),
+    source,
+    data: {
+      ...body,
+      name,
+      email,
+      tier,
+      tierLabel: label,
+    },
+  };
 
-  console.log("[feasibility:delivered]", {
+  const result = await deliverLead({
+    type: "feasibility",
+    subject,
+    studioHtml: buildStudioHtml(payload),
+    studioText: text,
+    confirmationHtml: buildLeadConfirmationHtml(payload),
+    confirmationText: [
+      `Thanks, ${name}.`,
+      ``,
+      `We received your Feasibility Read intake.`,
+      `Status: ${label}.`,
+      ``,
+      `Expect a follow-up from info@cielandstone.com within 24 hours for priority-fit projects, 1–2 business days otherwise.`,
+      ``,
+      `— Ciel & Stone`,
+    ].join("\n"),
     to: [STUDIO_EMAIL, leadEmail],
-    tier,
+    confirmationTo: [email],
+    replyTo: email,
+    priority: tier === "A",
     tag,
-    name,
-    email,
-    region: body?.region,
-    scope: body?.scope,
+    record,
   });
 
-  return NextResponse.json({ ok: true, delivered: true, tier });
+  if (!result.anyOk) {
+    return leadErrorResponse(result.errors);
+  }
+
+  return NextResponse.json({
+    ok: true,
+    delivered: result.mailgunOk,
+    webhookDelivered: result.webhookOk,
+    queued: !result.mailgunOk && (result.webhookOk || result.diskOk),
+    tier,
+  });
 }

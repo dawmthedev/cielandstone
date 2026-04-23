@@ -3,11 +3,14 @@ import Script from "next/script";
 import "./globals.css";
 import { LenisProvider } from "@/components/lenis/lenis-provider";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { MetaPixel } from "@/components/analytics/meta-pixel";
 import { Navbar } from "@/components/site/navbar";
 import { Footer } from "@/components/site/footer";
 import { siteConfig } from "@/lib/site";
+import { organizationSchema, renderJsonLd } from "@/lib/structured-data";
 
 const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-HLECQR8Q03";
+const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || "";
 
 export const metadata: Metadata = {
   title: {
@@ -55,6 +58,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased selection:bg-[var(--accent-strong)] selection:text-[var(--accent-contrast)]">
+        <Script
+          id="org-ld-json"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={renderJsonLd(organizationSchema())}
+        />
         {measurementId ? (
           <>
             <Script
@@ -67,12 +75,13 @@ export default function RootLayout({
                 function gtag(){window.dataLayer.push(arguments);}
                 window.gtag = window.gtag || gtag;
                 gtag('js', new Date());
-                gtag('config', '${measurementId}', { send_page_view: false });
+                gtag('config', '${measurementId}', { send_page_view: false, allow_enhanced_conversions: true });
               `}
             </Script>
             <GoogleAnalytics measurementId={measurementId} />
           </>
         ) : null}
+        {metaPixelId ? <MetaPixel pixelId={metaPixelId} /> : null}
         <LenisProvider>
           <div className="min-h-dvh bg-background text-foreground">
             <Navbar />
